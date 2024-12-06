@@ -1,0 +1,92 @@
+You have 10 nodes with 500GB of disk attached to each node. Let us say the node disk space reached 85% usage; 
+then the pod we have deployed should get evicted and re-deployed on a node with better disk health. Explain if this can even be done??????
+answer
+-----------------------------------------------------------------------------------------------------------------------------
+Yes, this behavior can be achieved in Kubernetes, but it requires the right configuration and mechanisms. 
+Kubernetes does not natively handle this exact scenario out of the box, but with the use of node eviction policies, taints and tolerations, 
+and custom monitoring, it is possible to achieve the desired behavior.
+
+Breaking Down the Problem
+Disk Space Monitoring:
+-----------------------
+Kubernetes tracks the disk usage on nodes and takes action when disk resources are critically low.
+By default, Kubernetes evicts pods only when a node’s disk usage hits the critical threshold defined in kubelet settings, such as diskPressure.
+85% Disk Usage Eviction:
+------------------------
+Kubernetes does not automatically evict pods at exactly 85% disk usage; however, you can adjust the thresholds or use custom mechanisms to implement this behavior.
+Re-deploying Pods:
+----------------------
+Kubernetes can automatically schedule evicted pods to another node if a suitable node with enough resources is available.
+
+Steps to Implement This Behavior
+1. Configure Kubelet Disk Eviction Thresholds
+-----------------------------------------------
+Kubernetes uses the kubelet to monitor resource usage, including disk space. 
+You can set custom eviction thresholds in the kubelet configuration.
+
+Example Configuration:
+
+
+evictionHard:
+  nodefs.available: "15%"  # Evict pods when less than 15% of disk space is available
+evictionSoft:
+  nodefs.available: "20%"  # Start soft eviction when less than 20% is available
+evictionSoftGracePeriod:
+  nodefs.available: "1m"  # Wait 1 minute before enforcing the soft eviction
+How It Works:
+
+When disk usage exceeds the specified threshold (e.g., less than 15% available), the node is marked under disk pressure, and pods are evicted based on their priority and usage.
+2. Use Taints and Tolerations for Disk Pressure
+When a node is under disk pressure, Kubernetes can automatically taint the node, preventing further pods from being scheduled while evicting existing ones.
+
+Example Taint (automatically added when disk pressure is detected):
+------------------------------------------------------------------
+key: node.kubernetes.io/disk-pressure
+effect: NoSchedule
+Tolerations (add to pod specs to handle eviction gracefully):
+
+
+tolerations:
+---------------------------------------------------------------------
+- key: "node.kubernetes.io/disk-pressure"
+  operator: "Exists"
+  effect: "NoSchedule"
+
+3. Monitor Disk Usage Using a Custom Solution
+--------------------------------------------------
+To specifically target 85% disk usage instead of relying on Kubernetes thresholds, you can:
+
+Deploy a monitoring tool like Prometheus with Node Exporter.
+Set up an alert to detect nodes with disk usage > 85%.
+Use a custom script or Kubernetes operator to:
+Evict pods on the affected node using the kubectl drain command.
+Ensure pods are rescheduled on healthier nodes.
+4. Pod Priority and Preemption
+To ensure critical pods are not affected, use Pod Priority Classes. Pods with lower priority are evicted first when a node is under resource pressure.
+
+Example Priority Class:
+---------------------------------------
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000
+  globalDefault: false
+  description: "Priority for critical workloads."
+Assign this priority class to critical pods so they are less likely to be evicted.
+
+Limitations
+Node Disk Space Awareness:
+--------------------------------
+Kubernetes doesn't directly allow scheduling decisions based on disk health or space.
+You may need a custom scheduler or third-party tools like Karpenter or Cluster Autoscaler to enforce such logic.
+Eviction Overhead:
+-------------------
+Evicting pods may disrupt services unless they are stateless or highly available.
+Conclusion
+Yes, it is feasible to evict pods when a node reaches 85% disk usage and redeploy them to healthier nodes. The solution involves:
+
+Configuring kubelet eviction thresholds.
+Leveraging taints and tolerations for disk pressure.
+Using monitoring tools like Prometheus for custom thresholds (like 85%).
+Ensuring pods are rescheduled to healthier nodes with sufficient resources.
