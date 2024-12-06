@@ -1,0 +1,72 @@
+question :
+---------------------------
+A pod is trying to access a volume but it gives access. I would like this pod to have access to this volume. What can we do the same.???
+
+answer :
+--------------------------
+
+The issue could be appear because of AccessMode of volume
+ * Not all PV allow multiple pod access
+ * In K8's
+   * ReadWriteOnce 
+   * ReadOnlyMany 
+   * ReadWriteMany
+   * ReadWriteOncePod
+ * Example NFS allows ReadWriteMany
+ * EBS allows only ReadWriteOnce
+
+ ---------------------------------
+
+ *you can change it the volume to "ReadWriteMany", THat might be giving the error this is the solution.
+
+ -----------------------------------------
+
+ explanation : 
+ 1. ReadWriteOnce (RWO)
+ ***************************
+Description: The volume can be mounted as read-write by a single node.
+Use Case:
+Best suited for scenarios where only one pod on a single node needs write access.
+Typically used for local storage or block storage like AWS EBS, GCE Persistent Disks, or Azure Disks.
+Example:
+A database pod (e.g., MySQL, PostgreSQL) that needs exclusive access to the volume.
+
+2. ReadOnlyMany (ROX)
+******************************
+Description: The volume can be mounted as read-only by multiple nodes simultaneously.
+Use Case:
+Ideal for distributing static or shared content (e.g., configuration files, web server static assets) across multiple pods.
+Often backed by storage systems like NFS or cloud file storage (e.g., AWS EFS).
+Example:
+Multiple web server pods needing access to shared, read-only content such as website assets.
+
+3. ReadWriteMany (RWX)
+*******************************
+Description: The volume can be mounted as read-write by multiple nodes simultaneously.
+Use Case:
+Suitable for shared writable storage scenarios where multiple pods may need to write concurrently.
+Requires a distributed or shared file system like NFS, AWS EFS, or GlusterFS.
+Example:
+A content management system (e.g., WordPress) with multiple replicas needing to upload or modify shared files.
+
+4. ReadWriteOncePod (RWOP)
+*******************************
+Description: The volume can be mounted as read-write by a single pod (introduced in Kubernetes 1.22).
+Use Case:
+Ensures that only one pod can write to the volume at any time, providing stricter control compared to ReadWriteOnce.
+Prevents accidental sharing of volumes when replicas of the same pod are scheduled.
+Example:
+Applications with strict data integrity requirements, such as database pods where even other pods on the same node should not access the volume.
+Comparison Table
+********************
+Access Mode	             Mounted by	                            Write Access	     Example Use Case
+ReadWriteOnce (RWO)	     Single pod on a single node	        Yes	                 Database (MySQL, PostgreSQL)
+ReadOnlyMany (ROX)	     Multiple pods across nodes	            No                   (read-only)Static website assets, configs
+ReadWriteMany (RWX)	     Multiple pods across nodes	            Yes	                 Shared writable file systems
+ReadWriteOncePod (RWOP)	 Single pod only (strictly enforced)	Yes	                  Stateful apps with strong isolation
+Storage Compatibility
+Not all storage backends support every access mode:
+
+AWS EBS, GCE Persistent Disks: Typically support only ReadWriteOnce.
+NFS, AWS EFS, GlusterFS: Support ReadWriteMany and ReadOnlyMany.
+

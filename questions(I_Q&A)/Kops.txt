@@ -1,0 +1,10 @@
+question :
+----------------------------
+what is kubernetes KOps???
+
+answer :
+----------------------------
+*->kOps is an automation tool used to setup a Kubernetes cluster instead of using kubeadmin to do it.
+*->kOps is not something that will help you setup managed Kubernetes cluster (EKS) or something but if you intended to spin a test cluster or a small dev cluster then kOps can quickly do this.
+*->kops will not only help you create, destroy, upgrade and maintain production-grade, highly available Kubernetes cluster, but it will also provision the necessary cloud infrastructure.
+*->It support AWS, DigitalOcean, GCE, and OpenStack in beta support, and Azure and AliCloud in alpha.

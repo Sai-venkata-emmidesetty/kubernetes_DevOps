@@ -1,0 +1,60 @@
+question
+----------------------------------------------------------------
+How does the K8's scheduler quickly assign worker nodes for the pods? Explain the internal working of K8's scheduler.
+
+
+answer:
+---------------------------------------------------------------------
+
+Kubernetes scheduler is responsible for scheduling the pods on different nodes.
+
+->Kubernetes Scheduler You all know that Kubernetes Scheduler is responsible for scheduling parts on different worker nodes. 
+But that is not the answer they are looking for in the interview. What they are looking for is to understand how does Kubernetes
+Scheduler manually provision these parts so quickly on the worker nodes. And does it have this information beforehand so that it
+can provision these parts on the respective worker nodes. 
+
+->Let us try to understand this now. Every worker node keeps on sending 
+their information to Scheduler. We are aware of this. And this particular information, or we can call it as metadata, that has been 
+sent to the Kubernetes control plate, a few sets of information are always stored, like the health of the overall instance, the load
+it is currently on, etc. These metadata determines how healthy this particular worker node is. With this information, what Scheduler
+does is it prepares a list. First it filters, and then it scores. And based on these two steps, it has a list of worker nodes that are 
+healthy. Healthy worker nodes. 
+
+->So one part is, it has all the information that it requires to know where to provision the parts. That is, where do I put the part of 
+which worker node is already healthy. And this information is already kept handy for the Scheduler by performing two steps, that is 
+filtering and scoring. What happens is, every part then goes through what we call as pod scheduling cycle.
+There is a service that is responsible for taking a part through this lifecycle, where a part information is passed on. That is, how much 
+resources this particular pod requires. And once this information is determined, it is cross-checked with the information that the Scheduler 
+has, that is, which worker can handle this part, and they are matched accordingly. This is the internal working of the Scheduler, and that is why 
+parts are provisioned very quickly on the respective worker nodes in Kubernetes 
+
+**************************************************************************************************************************************************
+How the Kubernetes Scheduler Works Internally???? 
+
+1. Node Metadata Collection:
+------------------------------
+Worker nodes continuously send their metadata (e.g., health, resource availability, current load) 
+to the Kubernetes Control Plane. This information is used to evaluate the state of each node.
+
+
+2. Filtering and Scoring:
+------------------------------
+Filtering: The Scheduler filters out nodes that do not meet the pod's requirements (e.g., insufficient resources, unsatisfactory taints/tolerations).
+
+Scoring: For the remaining nodes, the Scheduler assigns scores based on criteria like available CPU, memory, affinity/anti-affinity rules, and other policies.
+
+
+These two steps ensure that the Scheduler has a prioritized list of nodes that are "healthy" and suitable for scheduling pods.
+
+
+3. Pod Scheduling Cycle:
+----------------------------------
+When a pod needs to be scheduled:
+
+->The pod's requirements (e.g., resource requests/limits, constraints) are assessed.
+->These requirements are matched with the Scheduler's pre-filtered and scored list of nodes.
+The best-fit node is selected, and the pod is bound to it.
+
+4. Quick Provisioning:
+------------------------------------
+Since the Scheduler already has the node information prepared through filtering and scoring, it only needs to match the pod's specifications with the appropriate node. This pre-processing is what makes Kubernetes scheduling efficient.
